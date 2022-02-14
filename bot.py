@@ -1,7 +1,9 @@
-from email import message
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import os
 import sqlite3
+from scheduler import scheduler
+from dotenv import load_dotenv
+
 
 #Connect to the database and create a table if doesn't exist
 con = sqlite3.connect('database.db', check_same_thread=False)
@@ -10,6 +12,7 @@ cursor.execute('create table if not exists USERS (ID INT PRIMARY KEY, TLG_ID INT
 con.commit()
 
 #Set up the connection to the telegram
+load_dotenv()
 updater = Updater(os.getenv('KEY'), use_context=True) 
 dispatcher = updater.dispatcher
 
@@ -27,7 +30,7 @@ def Start(update, context):
     row = len(cursor.fetchall())
     if is_it_new_user: # Create a row with user values in USERS table
         update.message.reply_text("Lütfen /aralik [sayı] komutunu kullanarak bildirim alma sıklığını ayarla ヽ(^。^)丿")
-        update.message.reply_text("(max: 20)")
+        update.message.reply_text("(1, 5, 10 ya da 15)")
         cursor.execute(f"INSERT INTO USERS (ID, TLG_ID, TOKEN, FREQ) \
         VALUES ({len(cursor.fetchall()) + 1}, {update.message.from_user.id}, 0, 0)")
         con.commit()
@@ -46,19 +49,6 @@ updater.dispatcher.add_handler(CommandHandler('aralik', frequency))
 
 
 
-
-
+scheduler()
 updater.start_polling()
 updater.idle()
-
-"""
-
-* Set up the notification timer
-* Get the values from api
-* Process the values and find the one that have the most potential
-* Find a way to update tokens (4 word code?)
-* Make it work for different markets
-* SQL injection protection
-
-
-"""
